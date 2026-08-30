@@ -3,8 +3,7 @@ name: Build Pulse Android APK
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
@@ -12,192 +11,202 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v3
 
       - name: Install Android SDK
         run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
-      - name: Create Pulse Android project
+      - name: Create Pulse v0.2
         shell: bash
         run: |
           mkdir -p app/src/main/java/com/example/pulse
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
+            repositories { google(); mavenCentral(); gradlePluginPortal() }
           }
-
           dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories { google(); mavenCentral() }
           }
-
           rootProject.name = "Pulse"
           include ":app"
           EOF
 
           cat > build.gradle <<'EOF'
           plugins {
-              id "com.android.application" version "8.7.3" apply false
+            id "com.android.application" version "8.7.3" apply false
           }
           EOF
 
           cat > app/build.gradle <<'EOF'
-          plugins {
-              id "com.android.application"
-          }
-
+          plugins { id "com.android.application" }
           android {
-              namespace "com.example.pulse"
-              compileSdk 35
-
-              defaultConfig {
-                  applicationId "com.example.pulse"
-                  minSdk 26
-                  targetSdk 35
-                  versionCode 1
-                  versionName "0.1"
-              }
+            namespace "com.example.pulse"
+            compileSdk 35
+            defaultConfig {
+              applicationId "com.example.pulse"
+              minSdk 26
+              targetSdk 35
+              versionCode 2
+              versionName "0.2"
+            }
           }
           EOF
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-              <uses-permission android:name="android.permission.INTERNET" />
-
-              <application
-                  android:allowBackup="true"
-                  android:label="Pulse"
-                  android:theme="@android:style/Theme.Material.NoActionBar">
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true">
-
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-
-                  </activity>
-
-              </application>
-
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application android:allowBackup="true" android:label="Pulse"
+              android:theme="@android:style/Theme.Material.NoActionBar"
+              android:usesCleartextTraffic="false">
+              <activity android:name=".MainActivity" android:exported="true"
+                android:launchMode="singleTask">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN" />
+                  <category android:name="android.intent.category.LAUNCHER" />
+                </intent-filter>
+                <intent-filter>
+                  <action android:name="android.intent.action.VIEW" />
+                  <category android:name="android.intent.category.DEFAULT" />
+                  <category android:name="android.intent.category.BROWSABLE" />
+                  <data android:scheme="pulse-auth" android:host="callback" />
+                </intent-filter>
+              </activity>
+            </application>
           </manifest>
           EOF
 
-          cat > app/src/main/java/com/example/pulse/MainActivity.java <<'EOF'
-          package com.example.pulse;
-
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.graphics.Color;
-          import android.graphics.Typeface;
-          import android.view.Gravity;
-          import android.view.ViewGroup;
-          import android.widget.Button;
-          import android.widget.LinearLayout;
-          import android.widget.TextView;
-          import android.widget.Toast;
-
-          public class MainActivity extends Activity {
-
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  LinearLayout root = new LinearLayout(this);
-                  root.setOrientation(LinearLayout.VERTICAL);
-                  root.setGravity(Gravity.CENTER);
-                  root.setPadding(48, 48, 48, 48);
-                  root.setBackgroundColor(Color.rgb(10, 10, 14));
-
-                  TextView logo = new TextView(this);
-                  logo.setText("PULSE");
-                  logo.setTextColor(Color.WHITE);
-                  logo.setTextSize(40);
-                  logo.setTypeface(Typeface.DEFAULT_BOLD);
-                  logo.setGravity(Gravity.CENTER);
-
-                  TextView subtitle = new TextView(this);
-                  subtitle.setText("Your music. Your playlists. Synced.");
-                  subtitle.setTextColor(Color.rgb(170, 170, 180));
-                  subtitle.setTextSize(17);
-                  subtitle.setGravity(Gravity.CENTER);
-                  subtitle.setPadding(0, 20, 0, 60);
-
-                  Button spotifyButton = new Button(this);
-                  spotifyButton.setText("CONNECT SPOTIFY");
-                  spotifyButton.setTextSize(16);
-                  spotifyButton.setAllCaps(false);
-
-                  LinearLayout.LayoutParams buttonParams =
-                      new LinearLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT,
-                          ViewGroup.LayoutParams.WRAP_CONTENT
-                      );
-
-                  spotifyButton.setLayoutParams(buttonParams);
-
-                  spotifyButton.setOnClickListener(v ->
-                      Toast.makeText(
-                          this,
-                          "Spotify connection is coming next.",
-                          Toast.LENGTH_LONG
-                      ).show()
-                  );
-
-                  TextView status = new TextView(this);
-                  status.setText(
-                      "\nPulse Android Test Build\n\n" +
-                      "Spotify playlist sync will be connected after the APK pipeline is verified."
-                  );
-                  status.setTextColor(Color.rgb(120, 120, 130));
-                  status.setTextSize(14);
-                  status.setGravity(Gravity.CENTER);
-
-                  root.addView(logo);
-                  root.addView(subtitle);
-                  root.addView(spotifyButton);
-                  root.addView(status);
-
-                  setContentView(root);
-              }
-          }
+          cat > MainActivity.java.gz.b64 <<'EOF'
+          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
+          bgReVAAA
           EOF
 
-      - name: Build Pulse APK
+          base64 -d MainActivity.java.gz.b64 | gunzip > app/src/main/java/com/example/pulse/MainActivity.java
+          rm MainActivity.java.gz.b64
+
+      - name: Build Pulse v0.2 APK
         run: gradle :app:assembleDebug --stacktrace
 
-      - name: Upload Pulse APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Pulse-Android-APK
+          name: Pulse-v0.2-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
