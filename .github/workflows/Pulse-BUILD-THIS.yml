@@ -3,7 +3,8 @@ name: Build Pulse v0.3 APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -11,20 +12,25 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Install Android SDK
         run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
@@ -35,153 +41,437 @@ jobs:
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
-            repositories { google(); mavenCentral(); gradlePluginPortal() }
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
           }
+
           dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories { google(); mavenCentral() }
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+              repositories {
+                  google()
+                  mavenCentral()
+              }
           }
+
           rootProject.name = "Pulse"
           include ":app"
           EOF
 
           cat > build.gradle <<'EOF'
           plugins {
-            id "com.android.application" version "8.7.3" apply false
+              id "com.android.application" version "8.7.3" apply false
           }
           EOF
 
           cat > app/build.gradle <<'EOF'
-          plugins { id "com.android.application" }
+          plugins {
+              id "com.android.application"
+          }
 
           android {
-            namespace "com.example.pulse"
-            compileSdk 35
+              namespace "com.example.pulse"
+              compileSdk 35
 
-            defaultConfig {
-              applicationId "com.example.pulse"
-              minSdk 26
-              targetSdk 35
-              versionCode 3
-              versionName "0.3"
-            }
+              defaultConfig {
+                  applicationId "com.example.pulse"
+                  minSdk 26
+                  targetSdk 35
+                  versionCode 3
+                  versionName "0.3"
+              }
           }
           EOF
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
+
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <uses-permission android:name="android.permission.INTERNET" />
-            <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
-            <application
-              android:allowBackup="true"
-              android:label="Pulse"
-              android:theme="@android:style/Theme.Material.NoActionBar">
+              <uses-permission android:name="android.permission.INTERNET" />
 
-              <activity
-                android:name=".MainActivity"
-                android:exported="true"
-                android:launchMode="singleTask">
+              <uses-permission
+                  android:name="android.permission.READ_MEDIA_AUDIO" />
 
-                <intent-filter>
-                  <action android:name="android.intent.action.MAIN" />
-                  <category android:name="android.intent.category.LAUNCHER" />
-                </intent-filter>
+              <uses-permission
+                  android:name="android.permission.READ_EXTERNAL_STORAGE"
+                  android:maxSdkVersion="32" />
 
-                <intent-filter>
-                  <action android:name="android.intent.action.VIEW" />
-                  <category android:name="android.intent.category.DEFAULT" />
-                  <category android:name="android.intent.category.BROWSABLE" />
-                  <data android:scheme="pulse-auth" android:host="callback" />
-                </intent-filter>
+              <application
+                  android:allowBackup="true"
+                  android:label="Pulse"
+                  android:theme="@android:style/Theme.Material.NoActionBar"
+                  android:usesCleartextTraffic="false">
 
-              </activity>
-            </application>
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:launchMode="singleTask">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.VIEW" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <category android:name="android.intent.category.BROWSABLE" />
+
+                          <data
+                              android:scheme="pulse-auth"
+                              android:host="callback" />
+                      </intent-filter>
+
+                  </activity>
+
+              </application>
+
           </manifest>
           EOF
 
-          cat > MainActivity.java.gz.b64 <<'EOF'
-          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
+          cat > app/src/main/java/com/example/pulse/MainActivity.java <<'EOF'
+          package com.example.pulse;
+
+          import android.Manifest;
+          import android.app.Activity;
+          import android.content.ContentUris;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.database.Cursor;
+          import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.GradientDrawable;
+          import android.media.MediaPlayer;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.Handler;
+          import android.provider.MediaStore;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.ViewGroup;
+          import android.widget.BaseAdapter;
+          import android.widget.Button;
+          import android.widget.FrameLayout;
+          import android.widget.LinearLayout;
+          import android.widget.ListView;
+          import android.widget.SeekBar;
+          import android.widget.TextView;
+          import android.widget.Toast;
+
+          import java.util.ArrayList;
+          import java.util.Locale;
+
+          public class MainActivity extends Activity {
+
+              private static final int AUDIO_PERMISSION = 1001;
+
+              /*
+               * Spotify will use one Pulse developer Client ID later.
+               * Users will NOT see or enter it in the finished app.
+               */
+              private static final String SPOTIFY_CLIENT_ID = "";
+
+              private final ArrayList<Song> songs = new ArrayList<>();
+
+              private LinearLayout root;
+              private FrameLayout content;
+              private ListView songList;
+              private TextView emptyText;
+
+              private TextView nowTitle;
+              private TextView nowArtist;
+              private TextView elapsed;
+              private TextView total;
+
+              private Button playPause;
+              private Button previous;
+              private Button next;
+
+              private SeekBar seekBar;
+
+              private MediaPlayer player;
+              private int currentIndex = -1;
+
+              private final Handler handler = new Handler();
+
+              private boolean userSeeking = false;
+
+              private final Runnable progressUpdater = new Runnable() {
+                  @Override
+                  public void run() {
+                      try {
+                          if (player != null) {
+                              int position = player.getCurrentPosition();
+                              int duration = player.getDuration();
+
+                              if (!userSeeking) {
+                                  seekBar.setMax(Math.max(duration, 1));
+                                  seekBar.setProgress(position);
+                              }
+
+                              elapsed.setText(formatTime(position));
+                              total.setText(formatTime(duration));
+                          }
+                      } catch (Exception ignored) {
+                      }
+
+                      handler.postDelayed(this, 500);
+                  }
+              };
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  buildUi();
+                  requestAudioAccessIfNeeded();
+
+                  handler.post(progressUpdater);
+              }
+
+              private void buildUi() {
+                  root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setBackgroundColor(Color.rgb(8, 9, 13));
+
+                  TextView logo = new TextView(this);
+                  logo.setText("PULSE");
+                  logo.setTextColor(Color.WHITE);
+                  logo.setTextSize(30);
+                  logo.setTypeface(Typeface.DEFAULT_BOLD);
+                  logo.setGravity(Gravity.CENTER_VERTICAL);
+                  logo.setPadding(dp(20), dp(18), dp(20), dp(4));
+
+                  TextView subtitle = new TextView(this);
+                  subtitle.setText("Your music. Your playlists. Your player.");
+                  subtitle.setTextColor(Color.rgb(145, 148, 158));
+                  subtitle.setTextSize(14);
+                  subtitle.setPadding(dp(20), 0, dp(20), dp(14));
+
+                  root.addView(logo);
+                  root.addView(subtitle);
+
+                  LinearLayout tabs = new LinearLayout(this);
+                  tabs.setOrientation(LinearLayout.HORIZONTAL);
+                  tabs.setPadding(dp(16), 0, dp(16), dp(12));
+
+                  Button libraryTab = makeTab("LIBRARY");
+                  Button spotifyTab = makeTab("SPOTIFY");
+
+                  tabs.addView(
+                      libraryTab,
+                      new LinearLayout.LayoutParams(0, dp(48), 1)
+                  );
+
+                  LinearLayout.LayoutParams secondTabParams =
+                      new LinearLayout.LayoutParams(0, dp(48), 1);
+
+                  secondTabParams.setMargins(dp(8), 0, 0, 0);
+
+                  tabs.addView(spotifyTab, secondTabParams);
+
+                  root.addView(tabs);
+
+                  content = new FrameLayout(this);
+
+                  root.addView(
+                      content,
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          0,
+                          1
+                      )
+                  );
+
+                  buildPlayer();
+
+                  libraryTab.setOnClickListener(v -> showLibrary());
+                  spotifyTab.setOnClickListener(v -> showSpotify());
+
+                  setContentView(root);
+
+                  showLibrary();
+              }
+
+              private Button makeTab(String text) {
+                  Button button = new Button(this);
+                  button.setText(text);
+                  button.setTextColor(Color.WHITE);
+                  button.setTextSize(13);
+                  button.setTypeface(Typeface.DEFAULT_BOLD);
+                  button.setAllCaps(false);
+
+                  GradientDrawable bg = new GradientDrawable();
+                  bg.setColor(Color.rgb(25, 27, 34));
+                  bg.setCornerRadius(dp(14));
+
+                  button.setBackground(bg);
+
+                  return button;
+              }
+
+              private void showLibrary() {
+                  content.removeAllViews();
+
+                  LinearLayout page = new LinearLayout(this);
+                  page.setOrientation(LinearLayout.VERTICAL);
+
+                  LinearLayout header = new LinearLayout(this);
+                  header.setOrientation(LinearLayout.HORIZONTAL);
+                  header.setGravity(Gravity.CENTER_VERTICAL);
+                  header.setPadding(dp(20), dp(4), dp(12), dp(10));
+
+                  LinearLayout titles = new LinearLayout(this);
+                  titles.setOrientation(LinearLayout.VERTICAL);
+
+                  TextView title = new TextView(this);
+                  title.setText("On this phone");
+                  title.setTextColor(Color.WHITE);
+                  title.setTextSize(23);
+                  title.setTypeface(Typeface.DEFAULT_BOLD);
+
+                  TextView count = new TextView(this);
+                  count.setText(songs.size() + " songs");
+                  count.setTextColor(Color.rgb(130, 134, 145));
+                  count.setTextSize(13);
+
+                  titles.addView(title);
+                  titles.addView(count);
+
+                  header.addView(
+                      titles,
+                      new LinearLayout.LayoutParams(0, -2, 1)
+                  );
+
+                  Button refresh = new Button(this);
+                  refresh.setText("↻");
+                  refresh.setTextSize(24);
+                  refresh.setTextColor(Color.WHITE);
+
+                  GradientDrawable refreshBg = new GradientDrawable();
+                  refreshBg.setColor(Color.rgb(27, 29, 37));
+                  refreshBg.setCornerRadius(dp(50));
+
+                  refresh.setBackground(refreshBg);
+
+                  header.addView(
+                      refresh,
+                      new LinearLayout.LayoutParams(dp(52), dp(52))
+                  );
+
+                  refresh.setOnClickListener(v -> loadSongs());
+
+                  page.addView(header);
+
+                  emptyText = new TextView(this);
+                  emptyText.setText(
+                      "No playable music found yet.\n\n" +
+                      "Add MP3, M4A, FLAC or other audio files to your phone and Pulse will find them."
+                  );
+                  emptyText.setTextColor(Color.rgb(145, 148, 158));
+                  emptyText.setTextSize(16);
+                  emptyText.setGravity(Gravity.CENTER);
+                  emptyText.setPadding(dp(30), dp(50), dp(30), dp(30));
+
+                  songList = new ListView(this);
+                  songList.setDivider(null);
+                  songList.setBackgroundColor(Color.TRANSPARENT);
+                  songList.setAdapter(new SongAdapter());
+
+                  page.addView(
+                      songList,
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          0,
+                          1
+                      )
+                  );
+
+                  page.addView(emptyText);
+
+                  content.addView(
+                      page,
+                      new FrameLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          ViewGroup.LayoutParams.MATCH_PARENT
+                      )
+                  );
+
+                  updateLibraryEmptyState();
+              }
+
+              private void showSpotify() {
+                  content.removeAllViews();
+
+                  LinearLayout page = new LinearLayout(this);
+                  page.setOrientation(LinearLayout.VERTICAL);
+                  page.setGravity(Gravity.CENTER_HORIZONTAL);
+                  page.setPadding(dp(24), dp(28), dp(24), dp(24));
+
+                  TextView icon = new TextView(this);
+                  icon.setText("♫");
+                  icon.setTextSize(58);
+                  icon.setTextColor(Color.WHITE);
+                  icon.setGravity(Gravity.CENTER);
+
+                  TextView title = new TextView(this);
+                  title.setText("Import from Spotify");
+                  title.setTextColor(Color.WHITE);
+                  title.setTextSize(26);
+                  title.setTypeface(Typeface.DEFAULT_BOLD);
+                  title.setGravity(Gravity.CENTER);
+                  title.setPadding(0, dp(16), 0, dp(10));
+
+                  TextView info = new TextView(this);
+                  info.setText(
+                      "Spotify is only the source.\n\n" +
+                      "Pulse will import your playlists and keep its own library. " +
+                      "Playback stays inside Pulse whenever a playable audio source is available."
+                  );
+                  info.setTextColor(Color.rgb(155, 158, 169));
+                  info.setTextSize(16);
+                  info.setGravity(Gravity.CENTER);
+                  info.setLineSpacing(0, 1.2f);
+                  info.setPadding(0, 0, 0, dp(24));
+
+                  Button connect = new Button(this);
+                  connect.setText("Connect Spotify");
+                  connect.setTextSize(16);
+                  connect.setTextColor(Color.BLACK);
+                  connect.setTypeface(Typeface.DEFAULT_BOLD);
+                  connect.setAllCaps(false);
+
+                  GradientDrawable spotifyBg = new GradientDrawable();
+                  spotifyBg.setColor(Color.rgb(40, 220, 100));
+                  spotifyBg.setCornerRadius(dp(20));
+
+                  connect.setBackground(spotifyBg);
+
+                  page.addView(icon);
+                  page.addView(title);
+                  page.addView(info);
+
+                  page.addView(
+                      connect,
+                      new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT,
+                          dp(58)
+                      )
+                  );
+
+                  TextView note = new TextView(this);
+                  note.setText(
+                      "\nSpotify authentication will use Pulse's own app credential — " +
+                      "normal users will never need to enter a Client ID."
+                  );
+                  note.setTextColor(Color.rgb(100, 104, 115));
+                  note.setTextSize(12);
+                  note.setLQmJBrOD59gz0ruBcldxmUc8V5zFaI8EFxG8N5takYtXRsZSF0ioYpnBVMefXWvEo
           S4Fcquxm0RZ7+MN2a8+rlFIR3BB2but8WjNtqxnV6jrivyJZMwPH8Y2sa1XKhSnAnKYJaO3UksVN
           Sq5Bg+em5IsWehoihl4J2rHYJ6xnaDojNQdGiyoG+f330JS2WSw6PXimx0wlN1ZwUhVXDdEX2jch
           SLQwSSSgxCgocMFgWCWnkVkq2qbbISXuqkiqxDZ5gSAMwWlJQn/SgnqtC6VfkygVSo1fGpha3zf4
