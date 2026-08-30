@@ -827,5 +827,41 @@ jobs:
             }
 
             void nextSong() {
+                            if (!songs.isEmpty()) {
+                playSong(
+                  current >= songs.size() - 1
+                    ? 0
+                    : current + 1
+                );
+              }
+            }
 
-              
+            void releasePlayer() {
+              if (player != null) {
+                try {
+                  player.release();
+                } catch (Exception ignored) {
+                }
+
+                player = null;
+              }
+            }
+
+            @Override
+            protected void onDestroy() {
+              handler.removeCallbacks(tick);
+              releasePlayer();
+              super.onDestroy();
+            }
+          }
+          EOF
+
+      - name: Build APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pulse-v0.3-clean-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
