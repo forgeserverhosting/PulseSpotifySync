@@ -1,0 +1,37 @@
+plugins { id "com.android.application" }
+
+def spotifyClientId = project.findProperty("spotifyClientId") ?: System.getenv("SPOTIFY_CLIENT_ID") ?: ""
+
+android {
+    namespace "com.example.pulse"
+    compileSdk 35
+
+    signingConfigs {
+        pulseTest {
+            storeFile rootProject.file("pulse-test.jks")
+            storePassword "pulsepass"
+            keyAlias "pulse"
+            keyPassword "pulsepass"
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.example.pulse"
+        minSdk 26
+        targetSdk 35
+        versionCode 4
+        versionName "0.4"
+        buildConfigField "String", "SPOTIFY_CLIENT_ID", "\"${spotifyClientId}\""
+    }
+
+    buildFeatures { buildConfig true }
+
+    buildTypes {
+        debug { signingConfig signingConfigs.pulseTest }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
