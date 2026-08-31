@@ -1,9 +1,15 @@
-name: Build Pulse v0.4
+name: Build Pulse v0.4 APK
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - "app/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "pulse-test.jks"
+      - ".github/workflows/Pulse-v04.yml"
 
 permissions:
   contents: read
@@ -11,6 +17,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,112 +28,19 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
-      - name: Install SDK
+      - name: Install Android SDK
         run: yes | sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
-      - name: Create Pulse v0.4
-        shell: bash
-        run: |
-          mkdir -p app/src/main/java/com/example/pulse
+      - name: Build Pulse v0.4
+        run: gradle :app:assembleDebug --stacktrace -PspotifyClientId="${{ secrets.SPOTIFY_CLIENT_ID }}"
 
-          cat > settings.gradle <<'EOF'
-          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
-
-          dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories { google(); mavenCentral() }
-          }
-
-          rootProject.name = "Pulse"
-          include ":app"
-          EOF
-
-          cat > build.gradle <<'EOF'
-          plugins {
-            id "com.android.application" version "8.7.3" apply false
-          }
-          EOF
-
-          cat > app/build.gradle <<'EOF'
-          plugins { id "com.android.application" }
-
-          android {
-            namespace "com.example.pulse"
-            compileSdk 35
-
-            defaultConfig {
-              applicationId "com.example.pulse"
-              minSdk 26
-              targetSdk 35
-              versionCode 4
-              versionName "0.4"
-            }
-
-            signingConfigs {
-              debug {
-                storeFile rootProject.file("pulse-dev.keystore")
-                storePassword "pulsepass"
-                keyAlias "pulse"
-                keyPassword "pulsepass"
-              }
-            }
-
-            buildTypes {
-              debug {
-                signingConfig signingConfigs.debug
-              }
-            }
-          }
-          EOF
-
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-            <uses-permission android:name="android.permission.INTERNET" />
-            <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
-            <uses-permission
-              android:name="android.permission.READ_EXTERNAL_STORAGE"
-              android:maxSdkVersion="32" />
-
-            <application
-              android:allowBackup="true"
-              android:label="Pulse"
-              android:theme="@android:style/Theme.Material.NoActionBar"
-              android:usesCleartextTraffic="false">
-
-              <activity
-                android:name=".MainActivity"
-                android:exported="true"
-                android:launchMode="singleTask">
-
-                <intent-filter>
-                  <action android:name="android.intent.action.MAIN" />
-                  <category android:name="android.intent.category.LAUNCHER" />
-                </intent-filter>
-
-                <intent-filter>
-                  <action android:name="android.intent.action.VIEW" />
-                  <category android:name="android.intent.category.DEFAULT" />
-                  <category android:name="android.intent.category.BROWSABLE" />
-
-                  <data
-                    android:scheme="pulse-auth"
-                    android:host="callback" />
-                </intent-filter>
-
-              </activity>
-
-            </application>
-
-          </manifest>
-          EOF
-
-          cat > MainActivity.java.gz.b64 <<'EOF'
-          H4sICMVTlGoCA01haW5BY3Rpdml0eV92MDQuamF2YQC8XN1z28Z2f89fgeDBA45gmJRlx7YMubTE2OzVJZK0pCgtK0qUfe5M0KQQSY6UVDcZkvx7zz1yKQmS9Z3sQ0kR5wJ0sAQWAwx9dYH97p6h3t6eH14+fH78+fHh+ePnxxfP7+8uXj5+Pz1cP7l4+Xj98ePHj59fv/34ePn4+fj+4vPjx8+vHn7+ePXr5+fHh8+vP78+eXj4+fH19+eP/34+Pj8+fH77+8eP75+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+ePr7+ePj+8ePn4+fHj5+fH75+ePz5+e
+      - name: Upload Pulse v0.4 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pulse-v0.4-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
