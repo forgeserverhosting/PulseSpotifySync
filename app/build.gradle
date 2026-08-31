@@ -1,7 +1,5 @@
 plugins { id "com.android.application" }
 
-def spotifyClientId = project.findProperty("spotifyClientId") ?: System.getenv("SPOTIFY_CLIENT_ID") ?: ""
-
 android {
     namespace "com.example.pulse"
     compileSdk 35
@@ -19,12 +17,9 @@ android {
         applicationId "com.example.pulse"
         minSdk 26
         targetSdk 35
-        versionCode 4
-        versionName "0.4"
-        buildConfigField "String", "SPOTIFY_CLIENT_ID", "\"${spotifyClientId}\""
+        versionCode 5
+        versionName "0.5"
     }
-
-    buildFeatures { buildConfig true }
 
     buildTypes {
         debug { signingConfig signingConfigs.pulseTest }

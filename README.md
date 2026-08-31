@@ -1,29 +1,23 @@
-# Pulse v0.4
+# Pulse v0.5
 
-Pulse is an Android music library/player with Spotify used as a playlist import/sync source.
+Pulse is an Android local music player and playlist-import app.
 
-## v0.4
-- Polished dark UI with safe-area handling and bottom navigation.
-- Local Android audio playback with mini-player and seek control.
-- Cleaner display names for noisy local filenames.
-- Spotify Authorization Code + PKCE flow.
-- Spotify playlist browser, import-all and per-playlist import.
-- Saved Spotify-to-Pulse playlist mapping.
-- `snapshot_id` change detection and foreground/manual sync.
-- Access-token refresh.
-- Local matching of imported Spotify metadata to playable audio on the phone.
-- Stable test signing key so v0.4+ debug APKs can update over each other.
+## v0.5 direction
 
-## Spotify activation
-The Spotify sync code is complete, but a registered Spotify developer Client ID is required at runtime. No client secret is used.
+Spotify developer credentials are no longer part of the user experience.
 
-Preferred build setup: add a GitHub Actions repository secret named `SPOTIFY_CLIENT_ID`.
-For internal testing, long-press the PULSE logo or v0.4 badge and paste a Client ID into the hidden developer setup screen.
+### New in v0.5
+- Music-first local library filter that hides likely voice notes, recordings, WhatsApp audio and tiny clips by default.
+- One-tap switch to **All audio** when you do want everything.
+- Cleaner local track titles and better artwork fallbacks.
+- Persistent mini-player with previous / play-pause / next and seek.
+- Tap the mini-player to open a larger Now Playing view.
+- Universal playlist import from M3U, M3U8, CSV and JSON.
+- Pulse remembers imported source-file URIs and can **Refresh file** later.
+- Imported playlist cards show track count, local matches, source type and last refresh time.
+- Search covers local music plus imported playlist metadata.
+- Imported tracks play inside Pulse when a matching local audio file exists; otherwise a source link can open externally when present.
+- Share-to-Pulse support for playlist files.
 
-Redirect URI to register in the Spotify developer app:
-`pulse-auth://callback`
-
-Package name:
-`com.example.pulse`
-
-Spotify is used only for playlist metadata/import/sync. Spotify audio is not copied or downloaded.
+## Spotify
+Direct live Spotify account sync is intentionally not enabled in v0.5. Spotify's Web API requires an officially registered Spotify developer application. Pulse does not ask normal users for developer IDs or secrets.
